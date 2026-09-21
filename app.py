@@ -60,6 +60,31 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
 TIMEOUT = 25
 
+# ---------- 代理 ----------
+# 优先级：OPTIKLINK_PROXY 显式指定 > 工作流 sing-box（IS_PROXY/PROXY_SERVER，由 NODE_LINK 节点链接转出） > 标准 HTTP(S)_PROXY
+# vless/trojan 等节点链接请填到 Secrets 的 NODE_LINK（工作流 sing-box 步骤会转成本地代理），不要填 OPTIKLINK_PROXY
+def _get_proxy():
+    explicit = (os.environ.get("OPTIKLINK_PROXY") or "").strip()
+    if explicit:
+        scheme = explicit.split("://", 1)[0].lower() if "://" in explicit else ""
+        if scheme in ("http", "https", "socks4", "socks5", "socks5h"):
+            return {"http": explicit, "https": explicit}
+        print(f"  ⚠️ OPTIKLINK_PROXY 格式不支持 ({scheme}://)，已忽略；节点链接请填 NODE_LINK")
+    if os.environ.get("IS_PROXY", "").lower() == "true":
+        srv = (os.environ.get("PROXY_SERVER") or "socks5://127.0.0.1:1080").strip()
+        # setup_proxy.sh 的本地代理同时监听 http 1081；http 代理对 requests/curl_cffi 兼容最好，优先用它
+        if srv.lower() in ("socks5://127.0.0.1:1080", "socks5h://127.0.0.1:1080"):
+            srv = "http://127.0.0.1:1081"
+        print(f"  🔗 使用 sing-box 代理: {srv}")
+        return {"http": srv, "https": srv}
+    for k in ("HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy"):
+        p = (os.environ.get(k) or "").strip()
+        if p:
+            return {"http": p, "https": p}
+    return None
+
+PROXIES = _get_proxy()
+
 
 def mask(s: str, head: int = 4, tail: int = 4) -> str:
     s = s or ""
@@ -274,6 +299,17 @@ def main():
         sys.exit(1)
         
     session = http_client.Session() if not CURL_CFFI_AVAILABLE else http_client.Session(impersonate="chrome124")
+    if PROXIES:
+        try:
+            session.proxies.update(PROXIES)
+        except Exception:
+            pass
+        try:
+            ip_check = session.get("https://api.ip.sb/ip", timeout=10)
+            if ip_check.ok:
+                print(f"📍 当前出口 IP: {ip_check.text.strip()}")
+        except Exception:
+            pass
     details = []
     success_flags = []
     user_label = ""

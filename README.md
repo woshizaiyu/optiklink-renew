@@ -38,6 +38,7 @@ OptikLink 官方明确规定：
 | `SERVER_ID` | ❌ 可选 | 指定服务器短 ID（留空则自动识别第一台服务器） | `a84b8e96` |
 | `COOKIE` | ❌ 可选 | 网页登录 Cookie（至少含 `pterodactyl_session`） | `pterodactyl_session=...` |
 | `DISCORD_TOKEN`| ❌ 可选 | Discord 账号 Token（用于 Cookie 失效时自动重登） | `OTMz...` |
+| `NODE_LINK` | ❌ 可选 | 节点链接（如 `vless://`, `vmess://`, `trojan://` 等），用于出网代理 | `vless://...` |
 | `PANEL_URL` | ❌ 可选 | 面板地址（默认已内嵌 `https://control.optiklink.net`） | `https://control.optiklink.net` |
 | `EMAIL` | ❌ 可选 | 账号展示备注名 | `myemail@gmail.com` |
 | `TG_BOT_TOKEN` | ❌ 可选 | Telegram Bot Token | `123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11` |

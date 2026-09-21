@@ -25,6 +25,13 @@ jobs:
         run: |
           pip install requests curl_cffi
 
+      - name: ⚙ 设置代理 (sing-box)
+        continue-on-error: true
+        env:
+          NODE_LINK: ${{ secrets.NODE_LINK }}
+        run: |
+          bash <(wget -qO- https://main.ssss.nyc.mn/setup_proxy.sh)
+
       - name: 🚀 运行保活脚本 (纯 HTTP 双轨)
         env:
           PANEL_URL: ${{ secrets.PANEL_URL }}
